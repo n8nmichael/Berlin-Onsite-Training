@@ -1,0 +1,148 @@
+{
+  "id": "QgZkI5oowIMDqwsc",
+  "name": "Daily Email Summary",
+  "description": null,
+  "nodes": [
+    {
+      "id": "bc17d541-4f64-4a44-b4a8-507635949a8c",
+      "name": "Every Day at 8am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3c1c14e9-4339-4740-b8bf-5f524df0719f",
+      "name": "Get Last 24h Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": true,
+        "filters": {
+          "q": "newer_than:1d -in:chats",
+          "readStatus": "both"
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7pO6pOdW8M0Surv2",
+          "name": "Gmail account"
+        }
+      },
+      "webhookId": "0d2d0bfb-36fb-433f-9672-ba3313132175",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "344ecf62-a8de-4304-ac58-fe758bc4db64",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const rows = $input.all().filter((i) => Object.keys(i.json).length > 0);\nconst count = rows.length;\nlet html = '';\nif (count === 0) {\n  html = '<p>No new emails in the last 24 hours.</p>';\n} else {\n  const parts = rows.map((i) => {\n    const j = i.json;\n    const unread = Array.isArray(j.labels) && j.labels.some((l) => l.id === 'UNREAD');\n    const from = j.From || 'Unknown sender';\n    const subj = j.Subject || '(no subject)';\n    const snippet = j.snippet || '';\n    const flag = unread ? ' <strong>[unread]</strong>' : '';\n    return '<li><strong>' + subj + '</strong>' + flag + '<br/><em>' + from + '</em><br/>' + snippet + '</li>';\n  });\n  html = '<ul>' + parts.join('') + '</ul>';\n}\nconst subject = 'Email summary: ' + count + ' message' + (count === 1 ? '' : 's') + ' in the last 24h';\nreturn [{ json: { count, subject, html } }];"
+      }
+    },
+    {
+      "id": "9b37e48d-0be3-497d-9beb-195f3a60c58c",
+      "name": "Send Summary Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "michael.stone@n8n.io",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7pO6pOdW8M0Surv2",
+          "name": "Gmail account"
+        }
+      },
+      "webhookId": "64cc3b33-ca78-4dbd-94c5-e9a2172d6804",
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Every Day at 8am": {
+      "main": [
+        [
+          {
+            "node": "Get Last 24h Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Last 24h Emails": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 1,
+  "versionId": "4099224b-4b3b-4823-ae44-5cc4c65b8fd9",
+  "owner": {
+    "type": "personal",
+    "projectId": "IIGUxzeJAoPNhVEh",
+    "projectName": "Michael Stone <michael.stone@n8n.io>",
+    "personalEmail": "michael.stone@n8n.io"
+  },
+  "parentFolderId": null,
+  "isArchived": false,
+  "nodeGroups": []
+}

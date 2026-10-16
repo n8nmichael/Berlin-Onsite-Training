@@ -1,0 +1,18 @@
+{
+  "id": "7pO6pOdW8M0Surv2",
+  "name": "Gmail account",
+  "type": "gmailOAuth2",
+  "data": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "IIGUxzeJAoPNhVEh",
+    "projectName": "Michael Stone <michael.stone@n8n.io>",
+    "personalEmail": "michael.stone@n8n.io"
+  },
+  "isGlobal": false,
+  "isResolvable": false,
+  "resolvableAllowFallback": false
+}
